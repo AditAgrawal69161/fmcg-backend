@@ -3,7 +3,18 @@ import User from "../models/User.js";
 import fs from "fs";
 
 // Initialize Firebase Admin
-const serviceAccount = JSON.parse(fs.readFileSync("firebase-key.json"));
+import admin from "firebase-admin";
+
+const firebaseConfig = JSON.parse(process.env.FIREBASE_KEY);
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(firebaseConfig),
+  });
+}
+
+export default admin;
+
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
