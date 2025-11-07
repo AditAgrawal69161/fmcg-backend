@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import bodyParser from "body-parser";
 import db from "./config/db.js";
+import orderRoutes from "./routes/orderRoutes.js";
+
 
 dotenv.config();
 const app = express();
@@ -23,6 +25,8 @@ import productRoutes from "./routes/productRoutes.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/orders", orderRoutes);
+
 
 db.sync({ alter: true })
   .then(() => console.log("✅ Database connected & tables synced"))
