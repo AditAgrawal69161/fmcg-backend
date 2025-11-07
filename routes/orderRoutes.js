@@ -1,49 +1,55 @@
 import express from "express";
 import Order from "../models/Order.js";
-import db from "../config/db.js";
+import User from "../models/User.js";
 
 const router = express.Router();
 
-// 1) Health: check DB is reachable + list tables
-router.get("/health", async (req, res) => {
-  try {
-    await db.authenticate();
-    const [tables] = await db.query(
-      "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
-    );
-    res.json({ ok: true, tables });
-  } catch (e) {
-    console.error("HEALTH_ERROR:", e);
-    res.status(500).json({ ok: false, error: e.message, stack: e.stack });
-  }
+// ✅ Test route for sanity check
+router.get("/test", (req, res) => {
+  res.json({ message: "Order route working ✅" });
 });
 
-// 2) List orders (no include / associations)
+// ✅ Fetch all orders
 router.get("/", async (req, res) => {
   try {
     const orders = await Order.findAll({
-      order: [["createdAt", "DESC"]],
-      raw: true,
+      include: { model: User, attributes: ["id", "name", "email"] },
     });
-    res.json(orders);
-  } catch (e) {
-    console.error("ORDER_LIST_ERROR:", e);
-    res.status(500).json({ message: "Order list failed", error: e.message });
+    res.json({ success: true, orders });
+  } catch (err) {
+    console.error("❌ Error fetching orders:", err);
+    res.status(500).json({ message: "Error fetching orders", error: err.message });
   }
 });
 
-// 3) Seed one order quickly to test
-router.post("/seed", async (req, res) => {
+// ✅ Create new order
+router.post("/", async (req, res) => {
   try {
-    const seeded = await Order.create({
-      products: [{ sku: "SOAP", qty: 2 }, { sku: "SHAMPOO", qty: 1 }],
-      totalAmount: 120,
-      paymentStatus: "pending",
+    const { userId, products, totalAmount, paymentMode } = req.body;
+
+    // Basic validation
+    if (!userId || !products || !Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({ message: "Missing or invalid fields" });
+    }
+
+    const order = await Order.create({
+      UserId: userId,
+      products: JSON.stringify(products), // store as JSON string
+      totalAmount,
+      paymentStatus: paymentMode === "COD" ? "pending" : "paid",
     });
-    res.json(seeded);
-  } catch (e) {
-    console.error("SEED_ERROR:", e);
-    res.status(500).json({ message: "Seed failed", error: e.message });
+
+    res.status(201).json({
+      success: true,
+      message: "✅ Order created successfully",
+      order,
+    });
+  } catch (err) {
+    console.error("❌ Error creating order:", err);
+    res.status(500).json({
+      message: "Error creating order",
+      error: err.message,
+    });
   }
 });
 
