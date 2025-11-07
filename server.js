@@ -20,7 +20,7 @@ app.get("/", (req, res) => {
 import User from "./models/User.js";
 import Product from "./models/Product.js";
 import Order from "./models/Order.js";
-import Retailer from "./models/Retailer.js"; // ✅ Add this line
+import Retailer from "./models/Retailer.js";
 
 // Routes
 import authRoutes from "./routes/authRoutes.js";

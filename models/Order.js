@@ -1,36 +1,25 @@
 import { DataTypes } from "sequelize";
 import db from "../config/db.js";
-import User from "./User.js"; // keep this — Firebase users are stored here if applicable
-import Retailer from "./Retailer.js"; // newly added retailer model
+import User from "./User.js";
+import Retailer from "./Retailer.js"; // ✅ add this line
 
 const Order = db.define("Order", {
   products: {
-    type: DataTypes.JSON, // store product list like [{sku:'ABC',qty:10}]
+    type: DataTypes.JSON, // [{sku:'ABC', qty:10}]
     allowNull: false,
   },
   totalAmount: {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
-  paymentMethod: {
-    type: DataTypes.STRING,
-    defaultValue: "COD", // Cash on Delivery by default
-  },
   paymentStatus: {
     type: DataTypes.STRING,
-    defaultValue: "Pending",
-  },
-  orderStatus: {
-    type: DataTypes.STRING,
-    defaultValue: "Placed",
-  },
-  deliveryAddress: {
-    type: DataTypes.STRING,
+    defaultValue: "pending",
   },
 });
 
-// Relationships
-Order.belongsTo(User, { foreignKey: "userId" }); // link with Firebase-auth user
-Order.belongsTo(Retailer, { foreignKey: "retailerId" }); // link with retailer info
+// ✅ Relationships
+Order.belongsTo(User, { foreignKey: "userId", as: "user" });
+Order.belongsTo(Retailer, { foreignKey: "retailerId", as: "retailer" });
 
 export default Order;
