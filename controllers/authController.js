@@ -3,7 +3,6 @@ import User from "../models/User.js";
 import fs from "fs";
 
 // Initialize Firebase Admin
-import admin from "firebase-admin";
 
 const firebaseConfig = JSON.parse(process.env.FIREBASE_KEY);
 
