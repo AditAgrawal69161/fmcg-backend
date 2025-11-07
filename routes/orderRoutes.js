@@ -27,30 +27,29 @@ router.post("/", async (req, res) => {
   try {
     const { userId, products, totalAmount, paymentMode } = req.body;
 
-    // Basic validation
-    if (!userId || !products || !Array.isArray(products) || products.length === 0) {
-      return res.status(400).json({ message: "Missing or invalid fields" });
-    }
+    if (!userId || !products || !totalAmount)
+      return res.status(400).json({ message: "Missing required fields" });
 
     const order = await Order.create({
       UserId: userId,
-      products: JSON.stringify(products), // store as JSON string
+      products,
       totalAmount,
       paymentStatus: paymentMode === "COD" ? "pending" : "paid",
     });
 
-    res.status(201).json({
-      success: true,
-      message: "✅ Order created successfully",
-      order,
-    });
+    // 🧾 Log order details in Render logs
+    console.log("🆕 New Order Received:");
+    console.log(`👤 User ID: ${userId}`);
+    console.log(`🛒 Products: ${JSON.stringify(products)}`);
+    console.log(`💰 Total: ₹${totalAmount}`);
+    console.log(`💳 Payment: ${paymentMode}`);
+
+    res.status(201).json({ success: true, order });
   } catch (err) {
-    console.error("❌ Error creating order:", err);
-    res.status(500).json({
-      message: "Error creating order",
-      error: err.message,
-    });
+    console.error("❌ Error creating order:", err.message);
+    res.status(500).json({ message: "Error creating order", error: err.message });
   }
 });
+
 
 export default router;
