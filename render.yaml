@@ -2,9 +2,10 @@ services:
   - type: web
     name: fmcg-backend
     env: node
+    plan: free
     buildCommand: npm install
     startCommand: node server.js
-    plan: free
     envVars:
       - key: PORT
-        value: 5000
+        value: 10000
+
