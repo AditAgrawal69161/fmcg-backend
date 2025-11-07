@@ -1,11 +1,9 @@
 import { DataTypes } from "sequelize";
 import db from "../config/db.js";
-import User from "./User.js";
-import Retailer from "./Retailer.js"; // ✅ add this line
 
 const Order = db.define("Order", {
   products: {
-    type: DataTypes.JSON, // [{sku:'ABC', qty:10}]
+    type: DataTypes.JSON, // e.g. [{ sku: 'ABC', qty: 10 }]
     allowNull: false,
   },
   totalAmount: {
@@ -17,9 +15,5 @@ const Order = db.define("Order", {
     defaultValue: "pending",
   },
 });
-
-// ✅ Relationships
-Order.belongsTo(User, { foreignKey: "userId", as: "user" });
-Order.belongsTo(Retailer, { foreignKey: "retailerId", as: "retailer" });
 
 export default Order;
