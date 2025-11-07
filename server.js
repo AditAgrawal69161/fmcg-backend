@@ -5,21 +5,24 @@ import bodyParser from "body-parser";
 import db from "./config/db.js";
 import orderRoutes from "./routes/orderRoutes.js";
 
-
 dotenv.config();
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 
+// Root route
 app.get("/", (req, res) => {
   res.send("✅ FMCG Backend is running!");
 });
 
+// Models
 import User from "./models/User.js";
 import Product from "./models/Product.js";
 import Order from "./models/Order.js";
+import Retailer from "./models/Retailer.js"; // ✅ Add this line
 
+// Routes
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 
@@ -27,7 +30,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 
-
+// Database sync
 db.sync({ alter: true })
   .then(() => console.log("✅ Database connected & tables synced"))
   .catch((err) => console.error("❌ Database connection failed:", err));
