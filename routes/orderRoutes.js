@@ -4,31 +4,12 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-// ✅ Test route for sanity check
-router.get("/test", (req, res) => {
-  res.json({ message: "Order route working ✅" });
-});
-
-// ✅ Fetch all orders
-router.get("/", async (req, res) => {
-  try {
-    const orders = await Order.findAll({
-      include: { model: User, attributes: ["id", "name", "email"] },
-    });
-    res.json({ success: true, orders });
-  } catch (err) {
-    console.error("❌ Error fetching orders:", err);
-    res.status(500).json({ message: "Error fetching orders", error: err.message });
-  }
-});
-
-// ✅ Create new order
 router.post("/", async (req, res) => {
   try {
     const { userId, products, totalAmount, paymentMode } = req.body;
 
-    if (!userId || !products || !totalAmount)
-      return res.status(400).json({ message: "Missing required fields" });
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const order = await Order.create({
       UserId: userId,
@@ -37,19 +18,28 @@ router.post("/", async (req, res) => {
       paymentStatus: paymentMode === "COD" ? "pending" : "paid",
     });
 
-    // 🧾 Log order details in Render logs
-    console.log("🆕 New Order Received:");
-    console.log(`👤 User ID: ${userId}`);
-    console.log(`🛒 Products: ${JSON.stringify(products)}`);
-    console.log(`💰 Total: ₹${totalAmount}`);
-    console.log(`💳 Payment: ${paymentMode}`);
+    // 🧾 Log retailer details
+    console.log(`🆕 New order from ${user.shopName || user.name}`);
+    console.log(`📍 Address: ${user.address || "N/A"}, ${user.city || ""}`);
+    console.log(`📞 Mobile: ${user.mobile}`);
+    console.log(`💰 Amount: ₹${totalAmount}`);
 
-    res.status(201).json({ success: true, order });
+    res.status(201).json({
+      success: true,
+      message: "Order placed successfully",
+      order,
+      retailer: {
+        name: user.name,
+        shopName: user.shopName,
+        address: user.address,
+        city: user.city,
+        mobile: user.mobile,
+      },
+    });
   } catch (err) {
     console.error("❌ Error creating order:", err.message);
     res.status(500).json({ message: "Error creating order", error: err.message });
   }
 });
-
 
 export default router;

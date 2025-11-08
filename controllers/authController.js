@@ -20,30 +20,34 @@ if (!admin.apps.length) {
   });
 }
 
-export const verifyFirebaseToken = async (req, res) => {
-  const { idToken, name } = req.body;
-
+export const register = async (req, res) => {
   try {
-    // Verify token from client
-    const decoded = await admin.auth().verifyIdToken(idToken);
-    const mobile = decoded.phone_number;
+    const { name, mobile, password, shopName, address, city, pincode } = req.body;
 
-    if (!mobile) {
-      return res.status(400).json({ error: "No phone number found in token" });
-    }
+    if (!name || !mobile || !password)
+      return res.status(400).json({ message: "Missing required fields" });
 
-    // Find or create user
-    let user = await User.findOne({ where: { mobile } });
-    if (!user) {
-      user = await User.create({ mobile, name });
-    }
+    const existingUser = await User.findOne({ where: { mobile } });
+    if (existingUser)
+      return res.status(400).json({ message: "Mobile number already registered" });
 
-    res.json({
-      message: "User verified successfully",
+    const user = await User.create({
+      name,
+      mobile,
+      password,
+      shopName,
+      address,
+      city,
+      pincode,
+    });
+
+    res.status(201).json({
+      success: true,
       user,
+      message: "Retailer registered successfully",
     });
   } catch (error) {
-    console.error(error);
-    res.status(401).json({ error: "Invalid or expired token" });
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
