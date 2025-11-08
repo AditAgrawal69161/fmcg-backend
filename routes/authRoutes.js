@@ -1,7 +1,12 @@
 import express from "express";
-import { verifyFirebaseToken } from "../controllers/authController.js";
+import { register, login } from "../controllers/authController.js";
+
 const router = express.Router();
 
-router.post("/verify", verifyFirebaseToken);
+// ✅ Register new retailer
+router.post("/register", register);
+
+// ✅ Login existing retailer
+router.post("/login", login);
 
 export default router;
