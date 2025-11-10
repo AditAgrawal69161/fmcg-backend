@@ -73,9 +73,14 @@ app.use("/api/retailers", retailerRoutes);
 console.log("✅ Mounted all API routes successfully");
 
 // 🗄️ Sync DB and Start Server
-  db.sync({ alter: true, force: true })
-  .then(async () => {
-    console.log("✅ Database connected & tables synced (alter:true)");
+(async () => {
+  try {
+    // 🧹 TEMPORARY FIX — remove old Users table if it exists (REMOVE LATER)
+    await db.query('DROP TABLE IF EXISTS "Users" CASCADE;');
+    console.log("🧹 Old Users table dropped successfully");
+
+    await db.sync({ alter: true, force: true });
+    console.log("✅ Database connected & tables synced (force:true)");
 
     try {
       scheduleTallySync();
@@ -85,8 +90,8 @@ console.log("✅ Mounted all API routes successfully");
     }
 
     const PORT = process.env.PORT || 10000;
-    app.listen(PORT, () =>
-      console.log(`🚀 Server running on port ${PORT}`)
-    );
-  })
-  .catch((err) => console.error("❌ Database connection failed:", err));
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+  } catch (err) {
+    console.error("❌ Database connection failed:", err);
+  }
+})();
