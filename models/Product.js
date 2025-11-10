@@ -2,6 +2,12 @@ import { DataTypes } from "sequelize";
 import db from "../config/db.js";
 
 const Product = db.define("Product", {
+  sku: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    comment: "Unique product SKU identifier",
+  },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
