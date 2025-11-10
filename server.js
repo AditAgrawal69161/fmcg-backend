@@ -32,10 +32,11 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 🔥 Firebase setup
-const serviceAccountPath = path.join(__dirname, "firebase-key.json");
+// 🔥 Firebase Admin setup
 try {
   let serviceAccount;
+  const serviceAccountPath = path.join(__dirname, "firebase-key.json");
+
   if (fs.existsSync(serviceAccountPath)) {
     serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
     console.log("✅ Loaded firebase-key.json from local file");
@@ -54,17 +55,17 @@ try {
   console.warn("⚠️ Firebase initialization failed:", err.message);
 }
 
-// 🚀 Express setup
+// 🚀 Express app setup
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Root route
+// ✅ Root test route
 app.get("/", (req, res) => {
   res.send("✅ FMCG Backend is running fine on Render!");
 });
 
-// ✅ API routes
+// ✅ Register routes
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
@@ -73,9 +74,9 @@ app.use("/api/retailers", retailerRoutes);
 console.log("✅ Mounted all API routes successfully");
 
 // 🗄️ Sync DB and Start Server
-db.sync({ alter: true }) // ✅ one time run to update columns
+db.sync({ alter: true, force: false })
   .then(async () => {
-    console.log("✅ Database connected & tables synced");
+    console.log("✅ Database connected & tables synced (alter:true)");
 
     try {
       scheduleTallySync();
@@ -85,6 +86,8 @@ db.sync({ alter: true }) // ✅ one time run to update columns
     }
 
     const PORT = process.env.PORT || 10000;
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on port ${PORT}`)
+    );
   })
   .catch((err) => console.error("❌ Database connection failed:", err));
