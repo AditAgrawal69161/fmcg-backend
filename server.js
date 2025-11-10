@@ -82,6 +82,22 @@ db.sync({ alter: true, force: false })
     console.log("✅ Database connected & tables synced (alter:true)");
     await autoSeedProducts(); // 🌱 Automatically seed demo products when DB is empty
 
+
+    // 🧩 Fix missing SKU for old demo products (one-time repair)
+try {
+  const oldProducts = await Product.findAll({ where: { sku: null } });
+  for (const p of oldProducts) {
+    p.sku = `SKU-${p.id || Math.floor(Math.random() * 10000)}`;
+    await p.save();
+  }
+  if (oldProducts.length > 0)
+    console.log(`🩹 Fixed ${oldProducts.length} old products missing SKUs`);
+} catch (err) {
+  console.warn("⚠️ SKU fix failed:", err.message);
+}
+
+
+
     try {
       scheduleTallySync();
       console.log("🔄 Tally SKU auto-sync scheduled");

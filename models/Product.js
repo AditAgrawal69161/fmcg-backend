@@ -4,7 +4,7 @@ import db from "../config/db.js";
 const Product = db.define("Product", {
   sku: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     unique: true,
     comment: "Unique product SKU identifier",
   },
