@@ -26,6 +26,9 @@ import retailerRoutes from "./routes/retailerRoutes.js";
 // ⚙️ Optional services
 import { scheduleTallySync } from "./services/tallyService.js";
 
+import { autoSeedProducts } from "./utils/autoSeed.js";
+
+
 dotenv.config();
 
 // 🧭 Directory setup
@@ -77,6 +80,8 @@ console.log("✅ Mounted all API routes successfully");
 db.sync({ alter: true, force: false })
   .then(async () => {
     console.log("✅ Database connected & tables synced (alter:true)");
+
+    await autoSeedProducts(); // 🌱 Automatically seed demo products when DB is empty
 
     try {
       scheduleTallySync();
