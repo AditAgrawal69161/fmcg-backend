@@ -1,31 +1,27 @@
 import express from "express";
 import Product from "../models/Product.js";
 
-
-console.log("🧭 Render loaded productRoutes.js (v4) — includes /reset-seed route");
-
-
-
 const router = express.Router();
 
-// ✅ Log when this file is actually loaded on Render
-console.log("🧭 [productRoutes] Loaded successfully — v3");
+// ✅ Log when routes are loaded
+console.log("🧭 [productRoutes] Loaded successfully — production ready");
 
-// ✅ Test route to confirm routing
+// ✅ Ping route (for Render uptime checks)
 router.get("/ping", (req, res) => {
-  res.json({ ok: true, route: "/api/products/ping", timestamp: new Date().toISOString() });
+  res.json({
+    ok: true,
+    route: "/api/products/ping",
+    timestamp: new Date().toISOString(),
+  });
 });
 
-/**
- * 🧾 GET /api/products
- * Returns all products with proper SKU, name, price, and stock.
- */
+// 🧾 GET /api/products — Fetch all products
 router.get("/", async (req, res) => {
   try {
     const products = await Product.findAll({
       attributes: ["id", "sku", "name", "price", "stock"],
     });
-    console.log("🧾 Products fetched:", products.length);
+    console.log(`🧾 Products fetched: ${products.length}`);
     res.json({ products });
   } catch (error) {
     console.error("❌ Error fetching products:", error);
@@ -33,11 +29,13 @@ router.get("/", async (req, res) => {
   }
 });
 
-/**
- * 🌱 GET /api/products/reset-seed
- * Deletes all products and re-inserts fresh SKU-enabled test data.
- */
+// 🌱 Secure /reset-seed route (only active in non-production environments)
 router.get("/reset-seed", async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    console.warn("🚫 Reset-seed route blocked in production");
+    return res.status(403).json({ message: "Access denied in production" });
+  }
+
   try {
     await Product.destroy({ where: {} });
     console.log("🗑️ Old product data cleared.");
@@ -51,7 +49,10 @@ router.get("/reset-seed", async (req, res) => {
     await Product.bulkCreate(seedData);
     console.log("🌱 New SKUs seeded successfully.");
 
-    res.json({ message: "Database reset and seeded successfully!", count: seedData.length });
+    res.json({
+      message: "Database reset and seeded successfully!",
+      count: seedData.length,
+    });
   } catch (error) {
     console.error("❌ Error during reset/seed:", error);
     res.status(500).json({ message: "Failed to reset and seed products" });
