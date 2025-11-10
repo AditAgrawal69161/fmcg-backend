@@ -12,7 +12,6 @@ router.get("/", async (req, res) => {
     const products = await Product.findAll({
       attributes: ["id", "sku", "name", "price", "stock"],
     });
-
     console.log("🧾 Products fetched:", products.map((p) => p.toJSON()));
     res.json({ products });
   } catch (error) {
@@ -24,7 +23,7 @@ router.get("/", async (req, res) => {
 /**
  * ⚙️ TEMPORARY ROUTE: Reset and seed product data
  * Deletes all old products and inserts fresh sample products with SKUs.
- * Visit this URL ONCE: https://fmcg-backend-a2zx.onrender.com/api/products/reset-seed
+ * Visit once: https://fmcg-backend-a2zx.onrender.com/api/products/reset-seed
  */
 router.get("/reset-seed", async (req, res) => {
   try {
