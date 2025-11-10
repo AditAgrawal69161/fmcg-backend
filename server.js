@@ -73,7 +73,7 @@ app.use("/api/retailers", retailerRoutes);
 console.log("✅ Mounted all API routes successfully");
 
 // 🗄️ Sync DB and Start Server
-db.sync({ alter: true, force: false })
+  db.sync({ alter: true, force: true })
   .then(async () => {
     console.log("✅ Database connected & tables synced (alter:true)");
 
