@@ -1,4 +1,19 @@
+import admin from "firebase-admin";
 import User from "../models/User.js";
+
+// ✅ Initialize Firebase Admin using environment variable
+try {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
+
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    console.log("✅ Firebase initialized successfully");
+  }
+} catch (err) {
+  console.error("❌ Firebase initialization failed:", err.message);
+}
 
 // ✅ REGISTER — new retailer signup
 export const register = async (req, res) => {
