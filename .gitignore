@@ -1,7 +1,14 @@
+# Node modules
 node_modules/
+
+# Environment & config files
 .env
-firebase-key.json
+.env.*
+.env.local
 
 # Firebase / Google keys
+firebase-key.json
 serviceAccountKey.json
 
+# Build artifacts
+dist/
