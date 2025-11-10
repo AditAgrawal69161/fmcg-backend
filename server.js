@@ -32,18 +32,26 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 🔥 Firebase setup
+// 🔥 Firebase setup using local file (for dev) or env (for Render)
 const serviceAccountPath = path.join(__dirname, "firebase-key.json");
-if (fs.existsSync(serviceAccountPath)) {
-  const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
-  if (!admin.apps.length) {
+try {
+  let serviceAccount;
+  if (fs.existsSync(serviceAccountPath)) {
+    serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+    console.log("✅ Loaded firebase-key.json from local file");
+  } else if (process.env.FIREBASE_KEY) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
+    console.log("✅ Loaded Firebase key from environment variable");
+  }
+
+  if (serviceAccount && !admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
-    console.log("🔥 Firebase Admin initialized");
+    console.log("🔥 Firebase Admin initialized successfully");
   }
-} else {
-  console.warn("⚠️ firebase-key.json not found — Firebase features disabled");
+} catch (err) {
+  console.warn("⚠️ Firebase initialization failed:", err.message);
 }
 
 // 🚀 Express app setup
@@ -53,40 +61,21 @@ app.use(bodyParser.json());
 
 // ✅ Root test route
 app.get("/", (req, res) => {
-  res.send("✅ FMCG Backend v3 is running fine!");
+  res.send("✅ FMCG Backend is running fine on Render!");
 });
 
 // ✅ Register routes
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
-
-console.log("✅ Mounted /api/products routes successfully");
-
-
 app.use("/api/orders", orderRoutes);
 app.use("/api/retailers", retailerRoutes);
 
-// 🌱 Seed default products only once if DB is empty
-async function seedProducts() {
-  const count = await Product.count();
-  if (count === 0) {
-    await Product.bulkCreate([
-      { sku: "SOAP001", name: "Soap", price: 20, stock: 100 },
-      { sku: "SHAMP001", name: "Shampoo", price: 80, stock: 50 },
-      { sku: "TOOTH001", name: "Toothpaste", price: 40, stock: 70 },
-    ]);
-    console.log("🟢 Seeded default products into DB");
-  } else {
-    console.log(`ℹ️ Products already exist (${count})`);
-  }
-}
+console.log("✅ Mounted all API routes successfully");
 
 // 🗄️ Sync DB and Start Server
-db.sync({ alter: true, force: false }) // ⚠️ allow schema updates once
+db.sync({ alter: true, force: false })
   .then(async () => {
     console.log("✅ Database connected & tables synced (alter:true)");
-
-    await seedProducts();
 
     try {
       scheduleTallySync();
@@ -96,6 +85,8 @@ db.sync({ alter: true, force: false }) // ⚠️ allow schema updates once
     }
 
     const PORT = process.env.PORT || 10000;
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on port ${PORT}`)
+    );
   })
   .catch((err) => console.error("❌ Database connection failed:", err));
