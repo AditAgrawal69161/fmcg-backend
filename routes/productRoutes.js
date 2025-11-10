@@ -3,6 +3,14 @@ import Product from "../models/Product.js";
 
 const router = express.Router();
 
+// ✅ Log when this file is actually loaded on Render
+console.log("🧭 [productRoutes] Loaded successfully — v3");
+
+// ✅ Test route to confirm routing
+router.get("/ping", (req, res) => {
+  res.json({ ok: true, route: "/api/products/ping", timestamp: new Date().toISOString() });
+});
+
 /**
  * 🧾 GET /api/products
  * Returns all products with proper SKU, name, price, and stock.
@@ -12,7 +20,7 @@ router.get("/", async (req, res) => {
     const products = await Product.findAll({
       attributes: ["id", "sku", "name", "price", "stock"],
     });
-    console.log("🧾 Products fetched:", products.map((p) => p.toJSON()));
+    console.log("🧾 Products fetched:", products.length);
     res.json({ products });
   } catch (error) {
     console.error("❌ Error fetching products:", error);
@@ -21,27 +29,24 @@ router.get("/", async (req, res) => {
 });
 
 /**
- * ⚙️ TEMPORARY ROUTE: Reset and seed product data
- * Deletes all old products and inserts fresh sample products with SKUs.
- * Visit once: https://fmcg-backend-a2zx.onrender.com/api/products/reset-seed
+ * 🌱 GET /api/products/reset-seed
+ * Deletes all products and re-inserts fresh SKU-enabled test data.
  */
 router.get("/reset-seed", async (req, res) => {
   try {
-    // 🗑️ Delete all existing products
     await Product.destroy({ where: {} });
     console.log("🗑️ Old product data cleared.");
 
-    // 🌱 Insert fresh products with SKUs
-    const products = [
+    const seedData = [
       { sku: "SOAP001", name: "Soap", price: 20, stock: 100 },
       { sku: "SHAMP001", name: "Shampoo", price: 80, stock: 50 },
       { sku: "TOOTH001", name: "Toothpaste", price: 40, stock: 70 },
     ];
 
-    await Product.bulkCreate(products);
-    console.log("✅ New products with SKUs inserted.");
+    await Product.bulkCreate(seedData);
+    console.log("🌱 New SKUs seeded successfully.");
 
-    res.json({ message: "Database reset and seeded successfully!" });
+    res.json({ message: "Database reset and seeded successfully!", count: seedData.length });
   } catch (error) {
     console.error("❌ Error during reset/seed:", error);
     res.status(500).json({ message: "Failed to reset and seed products" });
