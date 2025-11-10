@@ -1,50 +1,56 @@
 import express from "express";
 import admin from "firebase-admin";
-import User from "../models/User.js";
+import Retailer from "../models/Retailer.js";
 
 const router = express.Router();
 
-// ✅ VERIFY OTP + AUTO REGISTER if new
+// ✅ Verify Firebase OTP + Auto-register retailer
 router.post("/verify", async (req, res) => {
   try {
     const { idToken, name, shopName, address, city, pincode, gst } = req.body;
-    if (!idToken)
-      return res.status(400).json({ message: "Missing Firebase ID token" });
 
-    // 🔹 Verify Firebase token
+    if (!idToken) {
+      return res.status(400).json({ message: "Missing Firebase ID token" });
+    }
+
+    // Verify token with Firebase
     const decoded = await admin.auth().verifyIdToken(idToken);
     const phone = decoded.phone_number;
+    const firebase_uid = decoded.uid;
 
-    if (!phone)
+    if (!phone) {
       return res.status(400).json({ message: "Phone number missing in token" });
+    }
 
-    // 🔹 Check if user already exists
-    let user = await User.findOne({ where: { mobile: phone } });
+    // Check if retailer already exists
+    let retailer = await Retailer.findOne({ where: { phone } });
 
-    if (!user) {
-      // 🔹 Create new retailer
-      user = await User.create({
-        name,
-        mobile: phone,
-        shopName,
-        address,
-        city,
-        pincode,
-        gst,
-        password: null, // OTP only
+    // If new retailer, create record
+    if (!retailer) {
+      retailer = await Retailer.create({
+        firebase_uid,
+        name: name || "",
+        shopName: shopName || "",
+        phone,
+        address: address || "",
+        city: city || "",
+        pincode: pincode || "",
+        gst: gst || null,
+        password: null, // ✅ allowed
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: "OTP verified successfully",
-      user,
+      retailer,
     });
   } catch (error) {
     console.error("OTP verification failed:", error);
-    res
-      .status(500)
-      .json({ message: "OTP verification failed", error: error.message });
+    return res.status(500).json({
+      message: "OTP verification failed",
+      error: error.message,
+    });
   }
 });
 

@@ -32,7 +32,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 🔥 Firebase setup using local file (for dev) or env (for Render)
+// 🔥 Firebase setup
 const serviceAccountPath = path.join(__dirname, "firebase-key.json");
 try {
   let serviceAccount;
@@ -54,17 +54,17 @@ try {
   console.warn("⚠️ Firebase initialization failed:", err.message);
 }
 
-// 🚀 Express app setup
+// 🚀 Express setup
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Root test route
+// ✅ Root route
 app.get("/", (req, res) => {
   res.send("✅ FMCG Backend is running fine on Render!");
 });
 
-// ✅ Register routes
+// ✅ API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
@@ -73,14 +73,9 @@ app.use("/api/retailers", retailerRoutes);
 console.log("✅ Mounted all API routes successfully");
 
 // 🗄️ Sync DB and Start Server
-(async () => {
-  try {
-    // 🧹 TEMPORARY FIX — remove old Users table if it exists (REMOVE LATER)
-    await db.query('DROP TABLE IF EXISTS "Users" CASCADE;');
-    console.log("🧹 Old Users table dropped successfully");
-
-    await db.sync({ alter: true, force: true });
-    console.log("✅ Database connected & tables synced (force:true)");
+db.sync({ alter: true }) // ✅ one time run to update columns
+  .then(async () => {
+    console.log("✅ Database connected & tables synced");
 
     try {
       scheduleTallySync();
@@ -91,7 +86,5 @@ console.log("✅ Mounted all API routes successfully");
 
     const PORT = process.env.PORT || 10000;
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-  } catch (err) {
-    console.error("❌ Database connection failed:", err);
-  }
-})();
+  })
+  .catch((err) => console.error("❌ Database connection failed:", err));

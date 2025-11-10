@@ -11,8 +11,8 @@ const Retailer = db.define(
     },
     firebase_uid: {
       type: DataTypes.STRING,
-      allowNull: true, // ✅ some users may not have Firebase UID
-      unique: true, // one retailer per Firebase UID
+      allowNull: true, // Firebase UID from decoded token
+      unique: true,
     },
     name: {
       type: DataTypes.STRING,
@@ -25,24 +25,28 @@ const Retailer = db.define(
     phone: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true, // one retailer per phone number
+      unique: true, // unique per phone number
     },
     address: {
       type: DataTypes.STRING,
+      allowNull: true,
     },
     city: {
       type: DataTypes.STRING,
+      allowNull: true,
     },
     pincode: {
       type: DataTypes.STRING,
+      allowNull: true,
     },
     gst: {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    // ✅ Password optional (since OTP only)
     password: {
       type: DataTypes.STRING,
-      allowNull: true, // ✅ make password optional for OTP login
+      allowNull: true,
       defaultValue: null,
     },
   },
