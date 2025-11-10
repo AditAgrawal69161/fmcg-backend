@@ -80,7 +80,6 @@ console.log("✅ Mounted all API routes successfully");
 db.sync({ alter: true, force: false })
   .then(async () => {
     console.log("✅ Database connected & tables synced (alter:true)");
-
     await autoSeedProducts(); // 🌱 Automatically seed demo products when DB is empty
 
     try {

@@ -3,59 +3,37 @@ import Product from "../models/Product.js";
 
 const router = express.Router();
 
-// ✅ Log when routes are loaded
-console.log("🧭 [productRoutes] Loaded successfully — production ready");
-
-// ✅ Ping route (for Render uptime checks)
-router.get("/ping", (req, res) => {
-  res.json({
-    ok: true,
-    route: "/api/products/ping",
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// 🧾 GET /api/products — Fetch all products
+// ✅ GET all products
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.findAll({
-      attributes: ["id", "sku", "name", "price", "stock"],
-    });
-    console.log(`🧾 Products fetched: ${products.length}`);
+    const products = await Product.findAll();
     res.json({ products });
   } catch (error) {
-    console.error("❌ Error fetching products:", error);
-    res.status(500).json({ message: "Failed to fetch products" });
+    console.error("❌ Failed to fetch products:", error);
+    res.status(500).json({ message: "Failed to fetch products", error: error.message });
   }
 });
 
-// 🌱 Secure /reset-seed route (only active in non-production environments)
-router.get("/reset-seed", async (req, res) => {
-  if (process.env.NODE_ENV === "production") {
-    console.warn("🚫 Reset-seed route blocked in production");
-    return res.status(403).json({ message: "Access denied in production" });
-  }
-
+// ✅ (Optional) POST - Add a product manually (for testing)
+router.post("/", async (req, res) => {
   try {
-    await Product.destroy({ where: {} });
-    console.log("🗑️ Old product data cleared.");
+    const { name, price, stock, category } = req.body;
+    if (!name || !price) {
+      return res.status(400).json({ message: "Name and price required" });
+    }
 
-    const seedData = [
-      { sku: "SOAP001", name: "Soap", price: 20, stock: 100 },
-      { sku: "SHAMP001", name: "Shampoo", price: 80, stock: 50 },
-      { sku: "TOOTH001", name: "Toothpaste", price: 40, stock: 70 },
-    ];
-
-    await Product.bulkCreate(seedData);
-    console.log("🌱 New SKUs seeded successfully.");
-
-    res.json({
-      message: "Database reset and seeded successfully!",
-      count: seedData.length,
+    const product = await Product.create({
+      name,
+      price,
+      stock: stock || 0,
+      category: category || "Misc",
+      isDemo: false,
     });
+
+    res.status(201).json({ message: "Product added successfully", product });
   } catch (error) {
-    console.error("❌ Error during reset/seed:", error);
-    res.status(500).json({ message: "Failed to reset and seed products" });
+    console.error("❌ Error adding product:", error);
+    res.status(500).json({ message: "Failed to add product", error: error.message });
   }
 });
 
