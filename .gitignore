@@ -1,3 +1,7 @@
 node_modules/
 .env
 firebase-key.json
+
+# Firebase / Google keys
+serviceAccountKey.json
+
