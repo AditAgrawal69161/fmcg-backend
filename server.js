@@ -59,6 +59,10 @@ app.get("/", (req, res) => {
 // ✅ Register routes
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+
+console.log("✅ Mounted /api/products routes successfully");
+
+
 app.use("/api/orders", orderRoutes);
 app.use("/api/retailers", retailerRoutes);
 

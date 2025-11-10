@@ -1,6 +1,11 @@
 import express from "express";
 import Product from "../models/Product.js";
 
+
+console.log("🧭 Render loaded productRoutes.js (v4) — includes /reset-seed route");
+
+
+
 const router = express.Router();
 
 // ✅ Log when this file is actually loaded on Render
