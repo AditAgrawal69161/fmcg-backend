@@ -1,44 +1,80 @@
+// routes/orderRoutes.js
 import express from "express";
-import Order from "../models/Order.js";
-import User from "../models/User.js";
+import admin from "../config/firebaseAdmin.js";
+import { placeOrder, getOrdersByRetailer } from "../controllers/orderController.js";
+import Retailer from "../models/Retailer.js";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+/**
+ * 🛒 POST /api/orders/place
+ * Places a new order for the authenticated retailer
+ */
+router.post("/place", async (req, res) => {
   try {
-    const { userId, products, totalAmount, paymentMode } = req.body;
+    const idToken = req.headers.authorization?.split("Bearer ")[1];
+    if (!idToken) {
+      return res.status(401).json({ message: "Missing or invalid token" });
+    }
 
-    const user = await User.findByPk(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    // ✅ Verify Firebase token
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const uid = decoded.uid;
 
-    const order = await Order.create({
-      UserId: userId,
-      products,
-      totalAmount,
-      paymentStatus: paymentMode === "COD" ? "pending" : "paid",
-    });
+    // ✅ Find retailer by Firebase UID
+    const retailer = await Retailer.findOne({ where: { firebase_uid: uid } });
+    if (!retailer) {
+      return res.status(404).json({ message: "Retailer not found. Please register first." });
+    }
 
-    // 🧾 Log retailer details
-    console.log(`🆕 New order from ${user.shopName || user.name}`);
-    console.log(`📍 Address: ${user.address || "N/A"}, ${user.city || ""}`);
-    console.log(`📞 Mobile: ${user.mobile}`);
-    console.log(`💰 Amount: ₹${totalAmount}`);
+    const { items } = req.body;
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: "Invalid order format: items must be an array" });
+    }
 
-    res.status(201).json({
-      success: true,
-      message: "Order placed successfully",
-      order,
-      retailer: {
-        name: user.name,
-        shopName: user.shopName,
-        address: user.address,
-        city: user.city,
-        mobile: user.mobile,
-      },
-    });
+    // ✅ Call controller function
+    const order = await placeOrder({ user: { id: retailer.id }, body: { items } }, res);
+
+    if (!res.headersSent) {
+      return res.status(201).json({
+        message: "Order placed successfully",
+        order,
+      });
+    }
   } catch (err) {
-    console.error("❌ Error creating order:", err.message);
-    res.status(500).json({ message: "Error creating order", error: err.message });
+    console.error("❌ Error placing order:", err);
+    if (!res.headersSent)
+      return res.status(500).json({ message: `Internal Server Error: ${err.message}` });
+  }
+});
+
+/**
+ * 🧾 GET /api/orders/myorders
+ * Fetch all past orders for logged-in retailer
+ */
+router.get("/myorders", async (req, res) => {
+  try {
+    const idToken = req.headers.authorization?.split("Bearer ")[1];
+    if (!idToken) {
+      return res.status(401).json({ message: "Missing or invalid token" });
+    }
+
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+
+    const retailer = await Retailer.findOne({ where: { firebase_uid: uid } });
+    if (!retailer) {
+      return res.status(404).json({ message: "Retailer not found." });
+    }
+
+    // ✅ Fetch orders from controller
+    const orders = await getOrdersByRetailer({ user: { id: retailer.id } }, res);
+
+    if (!res.headersSent) return res.json(orders);
+  } catch (err) {
+    console.error("❌ Error fetching orders:", err);
+    if (!res.headersSent)
+      return res.status(500).json({ message: `Internal Server Error: ${err.message}` });
   }
 });
 

@@ -4,8 +4,8 @@ import db from "../config/db.js";
 const Product = db.define("Product", {
   sku: {
     type: DataTypes.STRING,
-    unique: true,
     allowNull: false,
+    unique: true,
   },
   name: {
     type: DataTypes.STRING,
