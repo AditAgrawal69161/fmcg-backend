@@ -1,12 +1,16 @@
 import admin from "firebase-admin";
-import { readFileSync } from "fs";
 
-const serviceAccount = JSON.parse(
-  readFileSync("./serviceAccountKey.json", "utf8")
-);
+try {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    console.log("✅ Firebase Admin initialized successfully");
+  }
+} catch (err) {
+  console.error("❌ Firebase Admin init failed:", err.message);
+}
 
 export default admin;
