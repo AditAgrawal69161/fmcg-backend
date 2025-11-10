@@ -21,4 +21,23 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ⚙️ TEMPORARY: Seed products with SKU
+router.get("/seed", async (req, res) => {
+  try {
+    const products = [
+      { sku: "SOAP001", name: "Soap", price: 20, stock: 100 },
+      { sku: "SHAMP001", name: "Shampoo", price: 80, stock: 50 },
+      { sku: "TOOTH001", name: "Toothpaste", price: 40, stock: 70 },
+    ];
+
+    await Product.bulkCreate(products, { ignoreDuplicates: true });
+
+    res.json({ message: "✅ Products seeded successfully!" });
+  } catch (error) {
+    console.error("❌ Error seeding products:", error);
+    res.status(500).json({ message: "Failed to seed products" });
+  }
+});
+
+
 export default router;
